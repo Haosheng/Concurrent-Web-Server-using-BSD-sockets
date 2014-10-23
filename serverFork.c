@@ -12,6 +12,7 @@
 #include <sys/wait.h>	/* for the waitpid() system call */
 #include <signal.h>	/* signal name macros, and the kill() prototype */
 
+#define BUFFERSIZE 256
 
 void sigchld_handler(int s)
 {
@@ -92,12 +93,18 @@ int main(int argc, char *argv[])
 void dostuff (int sock)
 {
    int n;
-   char buffer[256];
-      
-   bzero(buffer,256);
-   n = read(sock,buffer,255);
+   char buffer[BUFFERSIZE];
+   bzero(buffer,BUFFERSIZE);
+   n = read(sock,buffer,BUFFERSIZE-1);
    if (n < 0) error("ERROR reading from socket");
    printf("Here is the message: %s\n",buffer);
+   while(n==BUFFERSIZE-1)
+   {
+      bzero(buffer,BUFFERSIZE);
+      n=read(sock,buffer,BUFFERSIZE);
+      printf("%s",buffer);
+   }
+   printf("\n");
    n = write(sock,"I got your message",18);
    if (n < 0) error("ERROR writing to socket");
 }
